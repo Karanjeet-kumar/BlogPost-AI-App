@@ -9,7 +9,7 @@ export default function NewPost() {
     const response = await fetch(`/api/generatePost`, {
       method: "POST",
     });
-    const json = await response.json;
+    const json = await response.json();
     console.log("RESULT: ", json);
     setPostContent(json.postContent);
   };
