@@ -11,7 +11,7 @@ export default function NewPost() {
     });
     const json = await response.json();
     console.log("RESULT: ", json);
-    setPostContent(json.postContent);
+    setPostContent(json.post.postContent);
   };
 
   return (
