@@ -6,8 +6,7 @@ export default async function handler(req, res) {
   });
   const openai = new OpenAIApi(config);
 
-  const topic = "dog ownership";
-  const keywords = "first-time dog owner, puppy diet";
+  const { topic, keywords } = req.body;
 
   try {
     const response = await openai.createChatCompletion({
