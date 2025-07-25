@@ -1,6 +1,20 @@
+import { getSession, withApiAuthRequired } from "@auth0/nextjs-auth0";
 import { Configuration, OpenAIApi } from "openai";
+import clientPromise from "../../lib/mongodb";
 
-export default async function handler(req, res) {
+export default withApiAuthRequired(async function handler(req, res) {
+  const { user } = await getSession(req, res);
+  const client = await clientPromise;
+  const db = client.db("BlogPost");
+  const userProfile = await db.collection("users").findOne({
+    auth0Id: user.sub,
+  });
+
+  if (!userProfile?.availableTokens) {
+    res.status(403);
+    return;
+  }
+
   const config = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
   });
@@ -55,7 +69,7 @@ export default async function handler(req, res) {
             ---
             The output json must be in the following format:
             {
-              "title": "example title"
+              "title": "example title",
               "metaDescription" : "example meta description"
             }
         `,
@@ -64,14 +78,36 @@ export default async function handler(req, res) {
       response_format: { type: "json_object" },
     });
 
-    const { title, metaDescription } =
-      seoResponse.data.choices[0]?.message?.content || {};
+    const { title, metaDescription } = JSON.parse(
+      seoResponse.data.choices[0]?.message?.content
+    );
 
     console.log(seoResponse.data.choices[0]?.message?.content);
+
+    await db.collection("users").updateOne(
+      {
+        auth0Id: user.sub,
+      },
+      {
+        $inc: {
+          availableTokens: -1,
+        },
+      }
+    );
+
+    const post = await db.collection("posts").insertOne({
+      postContent: postContent || "",
+      title: title || "",
+      metaDescription: metaDescription || "",
+      topic,
+      keywords,
+      userId: userProfile._id,
+      created: new Date(),
+    });
 
     res.status(200).json({ post: { postContent, title, metaDescription } });
   } catch (error) {
     console.error("Error generating blog post:", error.message || error);
     res.status(500).json({ error: "Failed to generate blog post." });
   }
-}
+});
