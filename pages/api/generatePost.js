@@ -22,20 +22,19 @@ export default withApiAuthRequired(async function handler(req, res) {
 
   const { topic, keywords } = req.body;
 
-  try {
-    const response = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: `
+  const response = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        role: "system",
+        content: `
             You are an SEO friendly blog post generator.
             You are designed to output markdown without frontmatter.
         `,
-        },
-        {
-          role: "user",
-          content: `
+      },
+      {
+        role: "user",
+        content: `
             Generate me a long and detailed SEO friendly blog post on following topic delimited by triple hyphens:
             ---
             ${topic}
@@ -45,25 +44,25 @@ export default withApiAuthRequired(async function handler(req, res) {
             ${keywords}
             ---
         `,
-        },
-      ],
-    });
+      },
+    ],
+  });
 
-    const postContent = response.data.choices[0]?.message.content;
+  const postContent = response.data.choices[0]?.message.content;
 
-    const seoResponse = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: `
+  const seoResponse = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        role: "system",
+        content: `
             You are an SEO friendly blog post generator.
             You are designed to output JSON. Do not include HTML tags in your output.
         `,
-        },
-        {
-          role: "user",
-          content: `
+      },
+      {
+        role: "user",
+        content: `
             Generate an SEO friendly title and SEO friendly meta description for the following blog post. 
             ${postContent}
             ---
@@ -73,41 +72,39 @@ export default withApiAuthRequired(async function handler(req, res) {
               "metaDescription" : "example meta description"
             }
         `,
-        },
-      ],
-      response_format: { type: "json_object" },
-    });
-
-    const { title, metaDescription } = JSON.parse(
-      seoResponse.data.choices[0]?.message?.content
-    );
-
-    console.log(seoResponse.data.choices[0]?.message?.content);
-
-    await db.collection("users").updateOne(
-      {
-        auth0Id: user.sub,
       },
-      {
-        $inc: {
-          availableTokens: -1,
-        },
-      }
-    );
+    ],
+    response_format: { type: "json_object" },
+  });
 
-    const post = await db.collection("posts").insertOne({
-      postContent: postContent || "",
-      title: title || "",
-      metaDescription: metaDescription || "",
-      topic,
-      keywords,
-      userId: userProfile._id,
-      created: new Date(),
-    });
+  const { title, metaDescription } = JSON.parse(
+    seoResponse.data.choices[0]?.message?.content
+  );
 
-    res.status(200).json({ post: { postContent, title, metaDescription } });
-  } catch (error) {
-    console.error("Error generating blog post:", error.message || error);
-    res.status(500).json({ error: "Failed to generate blog post." });
-  }
+  console.log(seoResponse.data.choices[0]?.message?.content);
+
+  await db.collection("users").updateOne(
+    {
+      auth0Id: user.sub,
+    },
+    {
+      $inc: {
+        availableTokens: -1,
+      },
+    }
+  );
+
+  const post = await db.collection("posts").insertOne({
+    postContent: postContent || "",
+    title: title || "",
+    metaDescription: metaDescription || "",
+    topic,
+    keywords,
+    userId: userProfile._id,
+    created: new Date(),
+  });
+
+  res.status(200).json({
+    postId: post.insertedId,
+  });
 });
