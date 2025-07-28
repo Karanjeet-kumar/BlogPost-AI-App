@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 import { AppLayout } from "../../components/AppLayout/AppLayout";
 import clientPromise from "../../lib/mongodb";
 import Markdown from "react-markdown";
+import { getAppProps } from "../../utils/getAppProps";
 
 export default function Post(props) {
   console.log("PROPS: ", props);
@@ -44,6 +45,7 @@ Post.getLayout = function getLayout(page, pageProps) {
 
 export const getServerSideProps = withPageAuthRequired({
   async getServerSideProps(ctx) {
+    const props = await getAppProps(ctx);
     const userSession = await getSession(ctx.req, ctx.res);
     const client = await clientPromise;
     const db = client.db("BlogPost");
@@ -72,6 +74,7 @@ export const getServerSideProps = withPageAuthRequired({
         metaDescription: post.metaDescription,
         keywords: post.keywords,
         postCreated: post.created.toString(),
+        ...props,
       },
     };
   },
