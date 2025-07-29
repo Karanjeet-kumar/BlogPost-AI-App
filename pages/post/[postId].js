@@ -10,16 +10,16 @@ import { getAppProps } from "../../utils/getAppProps";
 export default function Post(props) {
   console.log("PROPS: ", props);
   return (
-    <div className="overflow-auto h-full">
+    <div className="overflow-auto h-full bg-gradient-to-br from-green-50 to-green-100">
       <div className="max-w-screen-sm mx-auto">
-        <div className="text-sm font-bold mt-6 p-2 bg-stone-200 rounded-sm">
+        <div className="text-sm font-bold mt-6 p-2 bg-stone-300 rounded-sm">
           SEO title and meta description
         </div>
-        <div className="p-4 my-2 border border-stone-200 rounded-md">
+        <div className="p-4 my-2 border border-stone-400 rounded-md">
           <div className="text-blue-600 text-2xl font-bold">{props.title}</div>
           <div className="mt-2">{props.metaDescription}</div>
         </div>
-        <div className="text-sm font-bold mt-6 p-2 bg-stone-200 rounded-sm">
+        <div className="text-sm font-bold mt-6 p-2 bg-stone-300 rounded-sm">
           Keywords
         </div>
         <div className="flex flex-wrap pt-2 gap-1">
@@ -29,7 +29,7 @@ export default function Post(props) {
             </div>
           ))}
         </div>
-        <div className="text-sm font-bold mt-6 p-2 bg-stone-200 rounded-sm">
+        <div className="text-sm font-bold mt-6 p-2 bg-stone-300 rounded-sm">
           Blog post
         </div>
         {/* <div dangerouslySetInnerHTML={{ __html: props.postContent || "" }} /> */}
